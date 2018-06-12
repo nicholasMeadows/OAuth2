@@ -10,34 +10,27 @@ namespace OAuth2.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        //[RequireHttps]
+        public IActionResult Index([FromQuery] string param)
         {
-            return View();
+            return Redirect(param);
+            //return View();
         }
 
-        public IActionResult About()
+        public IActionResult Login(UserPassModel userPass)
         {
-            ViewData["Message"] = "Your application description page.";
+            
+            if (userPass.username == null || userPass.username.Length < 5 || userPass.username.Length > 15)
+            {
+                return View("~/Views/Home/Index.cshtml");
+            }
+            else if (userPass.password == null || userPass.password.Length < 5 || userPass.password.Length > 15)
+            {
+                return View("~/Views/Home/Index.cshtml");
+            }
 
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return Redirect("http://www.github.com/nicholasMeadows");
+           
         }
     }
 }
