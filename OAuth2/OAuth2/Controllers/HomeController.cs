@@ -18,18 +18,27 @@ namespace OAuth2.Controllers
 
         public IActionResult Login(UserPassModel userPass)
         {
-            
-            if (userPass.username == null || userPass.username.Length < 5 || userPass.username.Length > 15)
+            if (userPass.username != null && userPass != null)
             {
-                return View("~/Views/Home/Index.cshtml");
+                if (userPass.password.Contains('\'') || userPass.password.Contains('/') || userPass.password.Contains('"'))
+                {
+                    TempData["err"] = "Invalid";
+                    return View("~/Views/Home/Index.cshtml");
+                }
+
+                if (userPass.username.Contains('\'') || userPass.username.Contains('/') || userPass.username.Contains('"'))
+                {
+                    TempData["err"] = "Invalid";
+                    return View("~/Views/Home/Index.cshtml");
+                }
             }
-            else if (userPass.password == null || userPass.password.Length < 5 || userPass.password.Length > 15)
+            else
             {
+                TempData["err"] = "Invalid";
                 return View("~/Views/Home/Index.cshtml");
             }
 
-            return Redirect("http://www.github.com/nicholasMeadows");
-           
+            return Redirect("lskdjf");
         }
     }
 }
