@@ -13,8 +13,7 @@ namespace OAuth2.Controllers
         //[RequireHttps]
         public IActionResult Index([FromQuery] string param)
         {
-            return Redirect(param);
-            //return View();
+            return View();
         }
 
         public IActionResult Login(UserPassModel userPass)
