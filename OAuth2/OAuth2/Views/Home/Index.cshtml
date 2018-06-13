@@ -4,18 +4,21 @@
 
 @model OAuth2.Models.UserPassModel
 
-@using (Html.BeginForm("Login", "Home", FormMethod.Post))
+@using (Html.BeginForm(FormMethod.Post))
 {
     @if (@Model == null)
     {
-        
+
         @if (TempData["err"] != null)
         {
             <p style="color:red">Invalid username or password!</p>
+            <h2>@TempData["err"]</h2>
         }
         <a>Username: @Html.EditorFor(m => m.username)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.username)</a>
         <br />
+        <br />
         <a>Password: @Html.PasswordFor(m => m.password)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.password)</a>
+        <br />
         <br />
         <input type="submit" value="Login" />
 
