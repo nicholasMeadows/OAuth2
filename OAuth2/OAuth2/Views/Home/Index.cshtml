@@ -12,11 +12,10 @@
         @if (TempData["err"] != null)
         {
             <p style="color:red">Invalid username or password!</p>
-
         }
-        <a>Username: @Html.EditorFor(m => m.username)</a><!--<a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.username)</a>-->
+        <a>Username: @Html.EditorFor(m => m.username)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.username)</a>
         <br />
-        <a>Password: @Html.PasswordFor(m => m.password)</a><!--<a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.password)</a>-->
+        <a>Password: @Html.PasswordFor(m => m.password)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.password)</a>
         <br />
         <input type="submit" value="Login" />
 
