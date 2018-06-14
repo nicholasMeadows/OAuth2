@@ -132,6 +132,58 @@ namespace OAuth2.Models
 
         }
 
+        public static string ValidateAccessParams(AccessTokenParams param, string client_id, string client_secret) {
+            if (param.code == null)
+            {
+                return "Missing code parameter";
+            }
+            else if (param.grant_type == null)
+            {
+                return "Missing grant_type parameter";
+            }
+            else if (param.redirect_uri == null)
+            {
+                return "Missing redirect_uri parameter";
+            }
+
+            if (!param.grant_type.Equals("authorization_code") || !param.grant_type.Equals("refresh_token")) {
+                return "Illegal grant_type";
+            }
+
+            //validate code
+            connection = new MySqlConnection(connectionString);
+            connection.Open();
+            MySqlCommand query = new MySqlCommand("SELECT * FROM `oauth2`.`request_token`WHERE request_token = @request_token", connection);
+            query.Parameters.Add("@request_token", MySqlDbType.VarChar).Value = param.code;
+
+            MySqlDataReader reader = query.ExecuteReader();
+            reader.Read();
+
+            if (!reader.HasRows)
+            {
+                reader.Close();
+                connection.Close();
+                return "Illegal code";
+            }
+
+            reader.Close();
+
+            
+            //check redirect_uri
+            MySqlCommand redirect_uriQuery = new MySqlCommand("SELECT * FROM oauth2.redirect_urls WHERE client_id = @client_id AND redirect_uri = @redirect_uri;", connection);
+            redirect_uriQuery.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+            redirect_uriQuery.Parameters.Add("@redirect_uri", MySqlDbType.VarChar).Value = param.redirect_uri;
+            reader = redirect_uriQuery.ExecuteReader();
+            reader.Read();
+
+            if (!reader.HasRows)
+            {
+                return "Illegal redirect_uri";
+            }
+
+            return "";
+        }
+
         public static string GenerateToken(string client_id)
         {
             char[] token = new char[187];
