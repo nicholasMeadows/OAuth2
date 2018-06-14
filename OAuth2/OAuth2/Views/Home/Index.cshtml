@@ -23,6 +23,11 @@
         <input type="submit" value="Login" />
 
         <input type="button" value="Register" onclick="@("window.location.href='" + @Url.Action("register", "home") + "'");" />
+
+        <br />
+        <br />
+
+        <button class="cancel"><a style="text-decoration: none; color:black" href='@TempData["redirectErr"]'>Cancel</a></button>
      }
 }
 

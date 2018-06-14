@@ -48,6 +48,8 @@ namespace OAuth2.Controllers
                     return View();
                 }
             }
+
+            TempData["redirectErr"] = param.redirect_uri + "?error=access_denied&state=STATE";
             ModelState.Remove("username");
             ModelState.Remove("password");
             return View();
@@ -83,5 +85,9 @@ namespace OAuth2.Controllers
             registerInfo = new RegisterUserModel();
             return View(registerInfo);
         }
+        /*
+        public IActionResult Cancel() {
+
+        }*/
     }
 }
