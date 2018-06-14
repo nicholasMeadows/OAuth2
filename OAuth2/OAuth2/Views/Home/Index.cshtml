@@ -12,7 +12,6 @@
         @if (TempData["err"] != null)
         {
             <p style="color:red">Invalid username or password!</p>
-            <h2>@TempData["err"]</h2>
         }
         <a>Username: @Html.EditorFor(m => m.username)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.username)</a>
         <br />
@@ -22,7 +21,8 @@
         <br />
         <input type="submit" value="Login" />
 
-    }
+        <input type="button" value="Some text" onclick="@("window.location.href='" + @Url.Action("register", "Home") + "'");" />
+     }
 }
 
 <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.2.0.min.js"></script>
