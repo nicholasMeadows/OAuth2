@@ -38,7 +38,7 @@ namespace OAuth2.Controllers
                 else if (DatabaseContext.ValidateUser(userPass.username, userPass.password))
                 {
                     //Generate request token
-                    string request_token = DatabaseContext.GenerateToken();
+                    string request_token = DatabaseContext.GenerateToken(param.client_id);
                     //redirects user to redirect_url with request code
                     return Redirect(param.redirect_uri+"?code=" + request_token);
                 }

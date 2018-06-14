@@ -132,7 +132,7 @@ namespace OAuth2.Models
 
         }
 
-        public static string GenerateToken()
+        public static string GenerateToken(string client_id)
         {
             char[] token = new char[187];
             Random rand = new Random();
@@ -148,6 +148,16 @@ namespace OAuth2.Models
                 token[i] = (char)charAsNum;
             }
 
+            connection = new MySqlConnection(connectionString);
+            connection.Open();
+            MySqlCommand query = new MySqlCommand("INSERT INTO `oauth2`.`request_tokens` (client_id, request_token, time_stamp) VALUES (@client_id, @request_token, CURRENT_TIMESTAMP())", connection);
+
+            query.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+            query.Parameters.Add("@request_token", MySqlDbType.VarChar).Value = new string (token);
+
+            query.ExecuteNonQuery();
+            connection.Close();
+            
             return new string(token);
         }
     }
