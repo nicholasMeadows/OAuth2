@@ -19,6 +19,5 @@ namespace OAuth2.Models
         [MinLength(5, ErrorMessage = "Password must be at least 5 characters long")]
         [MaxLength(15, ErrorMessage = "Password cannot be longer than 15 characters")]
         public string password { get; set; }
-
     }
 }

@@ -44,3 +44,4 @@ C:\Users\guita\OneDrive\Documents\GitHub\OAuth2\OAuth2\OAuth2\obj\Debug\netcorea
 C:\Users\guita\OneDrive\Documents\GitHub\OAuth2\OAuth2\OAuth2\obj\Debug\netcoreapp2.1\OAuth2.dll
 C:\Users\guita\OneDrive\Documents\GitHub\OAuth2\OAuth2\OAuth2\obj\Debug\netcoreapp2.1\OAuth2.pdb
 C:\Users\guita\OneDrive\Documents\GitHub\OAuth2\OAuth2\OAuth2\obj\Debug\netcoreapp2.1\OAuth2.csproj.CopyComplete
+C:\Users\nicholas.meadows\Documents\GitHub\OAuth2\OAuth2\OAuth2\obj\Debug\netcoreapp2.1\Razor\Views\Home\Register.g.cshtml.cs

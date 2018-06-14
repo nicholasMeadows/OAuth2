@@ -14,11 +14,11 @@ namespace OAuth2.Models
         private static string server = "98.179.199.29";
         private static string database = "oauth2";
         private static string UID = "oauth2User";
-        private static string password = "oauth2User";
+        private static string dbPassword = "oauth2User";
         private static string connectionString = "SERVER=" + server + ";" +
                                 "DATABASE=" + database + ";" +
                                 "UID=" + UID + ";" +
-                                "PASSWORD=" + password + ";";
+                                "PASSWORD=" + dbPassword + ";";
 
         public static bool ValidateUser(string username, string password) {
             connection = new MySqlConnection(connectionString);
@@ -50,7 +50,7 @@ namespace OAuth2.Models
             return false;
         }
 
-        public static void RegisterUser(string username, string password)
+        public static void RegisterUser(RegisterUserModel registerUserModel)
         {
             //generate a 128-bit salt using a secure PRNG
             byte[] salt = new byte[128 / 8];
@@ -61,7 +61,7 @@ namespace OAuth2.Models
             
             // derive a 256-bit subkey (use HMACSHA1 with 10,000 iterations)
             string hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password,
+                password: registerUserModel.password,
                 salt: salt,
                 prf: KeyDerivationPrf.HMACSHA1,
                 iterationCount: 10000,
@@ -71,11 +71,12 @@ namespace OAuth2.Models
             connection.Open();
 
             MySqlCommand query = new MySqlCommand("INSERT INTO `oauth2`.`users` (`username`, `hash`, `salt`) VALUES (@username, @hash, @salt);", connection);
-            query.Parameters.Add("@username", MySqlDbType.VarChar).Value = username;
+            query.Parameters.Add("@username", MySqlDbType.VarChar).Value = registerUserModel.username; 
             query.Parameters.Add("@hash", MySqlDbType.VarChar).Value = hash;
             query.Parameters.Add("@salt", MySqlDbType.Blob).Value = salt;
 
             query.ExecuteNonQuery();
+            connection.Close();
         }
         public static string ValidateParams(ParamModel param) {
             if (param.client_id == null)

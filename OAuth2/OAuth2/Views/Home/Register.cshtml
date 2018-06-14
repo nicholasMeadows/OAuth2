@@ -1,29 +1,32 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Register Page";
 }
 
-@model OAuth2.Models.UserPassModel
+@model OAuth2.Models.RegisterUserModel
+
 
 @using (Html.BeginForm(FormMethod.Post))
 {
-    @if (@Model == null)
-    {
+    
 
         @if (TempData["err"] != null)
         {
-            <p style="color:red">Invalid username or password!</p>
-            <h2>@TempData["err"]</h2>
+            <p style="color:red">@TempData["err"]</p>
         }
+
         <a>Username: @Html.EditorFor(m => m.username)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.username)</a>
         <br />
         <br />
         <a>Password: @Html.PasswordFor(m => m.password)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.password)</a>
         <br />
         <br />
-        <input type="submit" value="Login" />
-
-        <input type="button" value="Register" onclick="@("window.location.href='" + @Url.Action("register", "home") + "'");" />
-     }
+        <a>Confirm Password: @Html.PasswordFor(m => m.confirmPassword)</a><a style="color:red; font-weight:bold">@Html.ValidationMessageFor(m => m.confirmPassword)</a>
+        
+        
+        <br />
+        <br />
+        <input type="submit" value="Register" />
+    
 }
 
 <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.2.0.min.js"></script>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OAuth2.Models;
+using System.Text.RegularExpressions;
 
 namespace OAuth2.Controllers
 {
@@ -23,14 +24,15 @@ namespace OAuth2.Controllers
             //Server side password validation
             if (userPass.username != null && userPass.password != null)
             {
-                if (userPass.password.Contains('\'') || userPass.password.Contains('/') || userPass.password.Contains('"'))
+
+                Regex regex = new Regex("(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$");
+
+                Match userMatch = regex.Match(userPass.username);
+                Match passMatch = regex.Match(userPass.password);
+               
+                if (!userMatch.Success || !passMatch.Success)
                 {
-                    TempData["err"] = "Invalid";
-                    return View();
-                }
-                else if (userPass.username.Contains('\'') || userPass.username.Contains('/') || userPass.username.Contains('"'))
-                {
-                    TempData["err"] = "Invalid";
+                    TempData["err"] = "Invalid 1";
                     return View();
                 }//Validates username and password 
                 else if (DatabaseContext.ValidateUser(userPass.username, userPass.password))
@@ -42,11 +44,44 @@ namespace OAuth2.Controllers
                 }
                 else
                 {
-                    TempData["err"] = "Invalid";
+                    TempData["err"] = "Invalid 2";
                     return View();
                 }
             }
+            ModelState.Remove("username");
+            ModelState.Remove("password");
             return View();
-        }               
+        }
+
+        public IActionResult Register(RegisterUserModel registerInfo)
+        {
+            
+            if (registerInfo.username != null && registerInfo.password != null && registerInfo.confirmPassword != null)
+            {
+                Regex regex = new Regex("(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$");
+
+                Match userMatch = regex.Match(registerInfo.username);
+                Match passMatch = regex.Match(registerInfo.password);
+                Match confirmPassMatch = regex.Match(registerInfo.confirmPassword);
+
+                if (!userMatch.Success || !passMatch.Success || !confirmPassMatch.Success)
+                {
+                    TempData["err"] = "Invalid info";
+                    return View();
+                }
+                else {
+                    DatabaseContext.RegisterUser(registerInfo);
+                    return RedirectToAction("Index");
+                }
+                
+
+            }
+
+            ModelState.Remove("username");
+            ModelState.Remove("password");
+            ModelState.Remove("confirmPassword");
+            registerInfo = new RegisterUserModel();
+            return View(registerInfo);
+        }
     }
 }
