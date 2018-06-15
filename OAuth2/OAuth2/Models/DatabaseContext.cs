@@ -146,17 +146,33 @@ namespace OAuth2.Models
                 return "Missing redirect_uri parameter";
             }
 
-            if (!param.grant_type.Equals("authorization_code") || !param.grant_type.Equals("refresh_token")) {
+            if (!param.grant_type.Equals("authorization_code") ){//|| !param.grant_type.Equals("refresh_token")) {
                 return "Illegal grant_type";
             }
 
-            //validate code
+            //Validate client_id and client_secret
             connection = new MySqlConnection(connectionString);
             connection.Open();
-            MySqlCommand query = new MySqlCommand("SELECT * FROM `oauth2`.`request_token`WHERE request_token = @request_token", connection);
+            MySqlCommand clientQuery = new MySqlCommand("SELECT * FROM `oauth2`.`client_info` WHERE client_id = @client_id AND client_secret = @client_secret", connection);
+            clientQuery.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+            clientQuery.Parameters.Add("@client_secret", MySqlDbType.VarChar).Value = client_secret;
+
+            MySqlDataReader reader = clientQuery.ExecuteReader();
+            reader.Read();
+
+            if (!reader.HasRows)
+            {
+                reader.Close();
+                connection.Close();
+                return "invalid client.";
+            }
+            reader.Close();
+
+            //validate code
+            MySqlCommand query = new MySqlCommand("SELECT * FROM `oauth2`.`request_tokens` WHERE request_token = @request_token", connection);
             query.Parameters.Add("@request_token", MySqlDbType.VarChar).Value = param.code;
 
-            MySqlDataReader reader = query.ExecuteReader();
+            reader = query.ExecuteReader();
             reader.Read();
 
             if (!reader.HasRows)
@@ -181,7 +197,7 @@ namespace OAuth2.Models
                 return "Illegal redirect_uri";
             }
 
-            return "";
+            return "Valid";
         }
 
         public static string GenerateToken(string client_id)
@@ -211,6 +227,60 @@ namespace OAuth2.Models
             connection.Close();
             
             return new string(token);
+        }
+
+
+        public static AccessTokenModel GenerateAccessToken(string client_id)
+        {
+
+            char[] accessToken = new char[151];
+            Random rand = new Random();
+
+            for (int i = 0; i < 151; ++i)
+            {
+                int charAsNum = rand.Next(45, 122);
+
+                while (charAsNum >= 58 && charAsNum <= 64 || charAsNum >= 91 && charAsNum <= 94 || charAsNum == 96 || charAsNum >= 46 && charAsNum <= 47)
+                {
+                    charAsNum = rand.Next(48, 122);
+                }
+                accessToken[i] = (char)charAsNum;
+            }
+
+
+            char[] refreshToken = new char[131];
+            
+
+            for (int i = 0; i < 131; ++i)
+            {
+                int charAsNum = rand.Next(45, 122);
+
+                while (charAsNum >= 58 && charAsNum <= 64 || charAsNum >= 91 && charAsNum <= 94 || charAsNum == 96 || charAsNum >= 46 && charAsNum <= 47)
+                {
+                    charAsNum = rand.Next(48, 122);
+                }
+                refreshToken[i] = (char)charAsNum;
+            }
+
+
+            AccessTokenModel token = new AccessTokenModel();
+            token.access_token = new string(accessToken);
+            token.expires_id = 3600;
+            token.refresh_token = new string(refreshToken);
+            token.scope = "";
+            token.token_type = "Bearer";
+
+
+            connection = new MySqlConnection(connectionString);
+            connection.Open();
+            MySqlCommand query = new MySqlCommand("INSERT INTO `oauth2`.`access_tokens` (client_id, access_token, refresh_token, timestamp) VALUES (@client_id, @access_token, @refresh_token, CURRENT_TIMESTAMP);", connection);
+            query.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+            query.Parameters.Add("@access_token", MySqlDbType.VarChar).Value = token.access_token;
+            query.Parameters.Add("@refresh_token", MySqlDbType.VarChar).Value = token.refresh_token;
+
+            query.ExecuteNonQuery();
+            connection.Close();
+            return token;
         }
     }
 }

@@ -16,28 +16,36 @@ namespace OAuth2.Controllers
     public class AccessTokenController : ControllerBase
     {
         [HttpPost]
-        public ActionResult getToken([FromForm] AccessTokenParams param, [FromHeader] string Authorization, [FromForm] string client_id, [FromForm] string client_secret)
+        public ActionResult postGetToken([FromForm] AccessTokenParams param, [FromHeader] string Authorization, [FromForm] string client_id, [FromForm] string client_secret)
         {
-
-            if (Authorization != null)
+            
+           if (Authorization != null)
             {
+                Authorization = Authorization.Substring(6);
                 byte[] data = Convert.FromBase64String(Authorization);
                 string[] decodedAuth = Encoding.UTF8.GetString(data).Split(':');
                 client_id = decodedAuth[0];
-                client_id.Substring(6);
                 client_secret = decodedAuth[1];
 
                 //continue with validation
-                DatabaseContext.ValidateAccessParams(param, client_id, client_secret);
+                string isValid = DatabaseContext.ValidateAccessParams(param, client_id, client_secret);
+                if (isValid.Equals("Valid"))
+                {
+                    return Ok(DatabaseContext.GenerateAccessToken(client_id));
+                }
+                else {
+                    return Ok(isValid);
+                }
+
+                
             }
             else if (client_id == null || client_secret == null)
             {
-                return Ok("Missing Authorization header or client_id/client_secrete in form");
+                return Ok("Missing Authorization header or client_id/client_secret in form");
             }
 
-
-
-            return Ok(param);
+            //return Ok(param);
+            return NotFound();
         }
     }
 }
