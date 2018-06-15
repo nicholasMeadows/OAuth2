@@ -343,21 +343,6 @@ namespace OAuth2.Models
         {
             //get required info to update db table
 
-            char[] accessToken = new char[151];
-            Random rand = new Random();
-
-            for (int i = 0; i < 151; ++i)
-            {
-                int charAsNum = rand.Next(45, 122);
-
-                while (charAsNum >= 58 && charAsNum <= 64 || charAsNum >= 91 && charAsNum <= 94 || charAsNum == 96 || charAsNum >= 46 && charAsNum <= 47)
-                {
-                    charAsNum = rand.Next(48, 122);
-                }
-                accessToken[i] = (char)charAsNum;
-            }
-
-
             connection = new MySqlConnection(connectionString);
             connection.Open();
             MySqlCommand accessInfo = new MySqlCommand("SELECT * FROM `oauth2`.`access_tokens` where refresh_token = @refresh_token AND client_id = @client_id;", connection);
@@ -368,22 +353,54 @@ namespace OAuth2.Models
             reader.Read();
 
             string access_token = (string)reader["access_token"];
-            reader.Close();
-            MySqlCommand updateAccessToken = new MySqlCommand("UPDATE oauth2.access_tokens SET access_token = @access_token, timestamp = CURRENT_TIMESTAMP WHERE client_id = @client_id AND refresh_token = @refresh_token;", connection);
-            updateAccessToken.Parameters.Add("@access_token", MySqlDbType.VarChar).Value = new string(accessToken);
-            updateAccessToken.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = param.client_id;
-            updateAccessToken.Parameters.Add("@refresh_token", MySqlDbType.VarChar).Value = refresh_token;
+            DateTime timestamp = (DateTime)reader["timestamp"];
+            DateTime now = DateTime.Now;
 
-            updateAccessToken.ExecuteNonQuery();
-            connection.Close();
+            TimeSpan span = now.Subtract(timestamp);
 
-            RefreshTokenModel token = new RefreshTokenModel();
-            token.access_token = new string(accessToken);
-            token.expires_id = 3600;
-            token.scope = "";
-            token.token_type = "Bearer";
+            if (span.Hours >= 1)
+            {
 
-            return token;
+                char[] accessToken = new char[151];
+                Random rand = new Random();
+
+                for (int i = 0; i < 151; ++i)
+                {
+                    int charAsNum = rand.Next(45, 122);
+
+                    while (charAsNum >= 58 && charAsNum <= 64 || charAsNum >= 91 && charAsNum <= 94 || charAsNum == 96 || charAsNum >= 46 && charAsNum <= 47)
+                    {
+                        charAsNum = rand.Next(48, 122);
+                    }
+                    accessToken[i] = (char)charAsNum;
+                }
+
+                reader.Close();
+                MySqlCommand updateAccessToken = new MySqlCommand("UPDATE oauth2.access_tokens SET access_token = @access_token, timestamp = CURRENT_TIMESTAMP WHERE client_id = @client_id AND refresh_token = @refresh_token;", connection);
+                updateAccessToken.Parameters.Add("@access_token", MySqlDbType.VarChar).Value = new string(accessToken);
+                updateAccessToken.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = param.client_id;
+                updateAccessToken.Parameters.Add("@refresh_token", MySqlDbType.VarChar).Value = refresh_token;
+
+                updateAccessToken.ExecuteNonQuery();
+                connection.Close();
+
+                RefreshTokenModel token = new RefreshTokenModel();
+                token.access_token = new string(accessToken);
+                token.expires_id = 3600;
+                token.scope = "";
+                token.token_type = "Bearer";
+
+                return token;
+            }
+            else {
+                RefreshTokenModel token = new RefreshTokenModel();
+                token.access_token = access_token;
+                token.expires_id = 3600;
+                token.scope = "";
+                token.token_type = "Bearer";
+
+                return token;
+            }
 
         }
     }
