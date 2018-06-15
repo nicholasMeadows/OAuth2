@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Text;
 
 namespace OAuth2.Models
 {
@@ -78,6 +79,7 @@ namespace OAuth2.Models
             query.ExecuteNonQuery();
             connection.Close();
         }
+
         public static string ValidateParams(ParamModel param) {
             if (param.client_id == null)
             {
@@ -132,71 +134,125 @@ namespace OAuth2.Models
 
         }
 
-        public static string ValidateAccessParams(AccessTokenParams param, string client_id, string client_secret) {
-            if (param.code == null)
+        public static string ValidateAccessParams(AccessTokenParams param, string authorization) {
+            string client_id;
+            string client_secret;
+
+            if (authorization == null)
             {
-                return "Missing code parameter";
+                if (param.client_id == null || param.client_secret == null)
+                {
+                    return "Missing client";
+                }
+                else
+                {
+                    client_id = param.client_id;
+                    client_secret = param.client_secret;
+                }
             }
-            else if (param.grant_type == null)
-            {
-                return "Missing grant_type parameter";
-            }
-            else if (param.redirect_uri == null)
-            {
-                return "Missing redirect_uri parameter";
+            else{
+                authorization = authorization.Substring(6);
+                byte[] data = Convert.FromBase64String(authorization);
+                string[] decodedAuth = Encoding.UTF8.GetString(data).Split(':');
+                client_id = decodedAuth[0];
+                client_secret = decodedAuth[1];
+                param.client_id = client_id;
+                param.client_secret = client_secret;
             }
 
-            if (!param.grant_type.Equals("authorization_code") ){//|| !param.grant_type.Equals("refresh_token")) {
-                return "Illegal grant_type";
-            }
-
-            //Validate client_id and client_secret
+            //Validate client id and client_secret
             connection = new MySqlConnection(connectionString);
             connection.Open();
-            MySqlCommand clientQuery = new MySqlCommand("SELECT * FROM `oauth2`.`client_info` WHERE client_id = @client_id AND client_secret = @client_secret", connection);
-            clientQuery.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
-            clientQuery.Parameters.Add("@client_secret", MySqlDbType.VarChar).Value = client_secret;
 
-            MySqlDataReader reader = clientQuery.ExecuteReader();
+            //check client_id and client_secret
+            MySqlCommand clientId_SecretCheck = new MySqlCommand("SELECT * FROM `oauth2`.`client_info` WHERE client_id = @client_id AND client_secret = @client_secret", connection);
+            clientId_SecretCheck.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+            clientId_SecretCheck.Parameters.Add("@client_secret", MySqlDbType.VarChar).Value = client_secret;
+            MySqlDataReader reader = clientId_SecretCheck.ExecuteReader();
             reader.Read();
 
             if (!reader.HasRows)
             {
                 reader.Close();
                 connection.Close();
-                return "invalid client.";
+                return "Illegal client";
             }
             reader.Close();
 
-            //validate code
-            MySqlCommand query = new MySqlCommand("SELECT * FROM `oauth2`.`request_tokens` WHERE request_token = @request_token", connection);
-            query.Parameters.Add("@request_token", MySqlDbType.VarChar).Value = param.code;
 
-            reader = query.ExecuteReader();
-            reader.Read();
-
-            if (!reader.HasRows)
+            if (param.grant_type == null)
             {
+                return "Missing grant_type";
+            }            
+            else if (param.grant_type.Equals("refresh_token"))
+            {
+                if (param.refresh_token == null)
+                {
+                    return "Missing refresh_token";
+                }
+
+                //validate refreshtoken
+                MySqlCommand checkRefreshToken = new MySqlCommand("SELECT * FROM `oauth2`.`access_tokens` WHERE client_id = @client_id AND refresh_token = @refresh_token", connection);
+                checkRefreshToken.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+                checkRefreshToken.Parameters.Add("@refresh_token", MySqlDbType.VarChar).Value = param.refresh_token;
+                reader = checkRefreshToken.ExecuteReader();
+                reader.Read();
+
+                if (!reader.HasRows)
+                {
+                    return "Illegal refresh_token";
+                }
+
+                
+                return "Refresh";
+            }
+            else if (param.grant_type.Equals("authorization_code")) {
+
+                if (param.code == null)
+                {
+                    return "Missing code";
+                }
+
+                if (param.redirect_uri == null)
+                {
+                    return "Missing redirect_uri";
+                }
+
+                //Validate to database
+                //Check valid request code
+                MySqlCommand checkCode = new MySqlCommand("SELECT * FROM `oauth2`.`request_tokens` WHERE client_id = @client_id AND request_token = @request_token;", connection);
+                checkCode.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+                checkCode.Parameters.Add("@request_token", MySqlDbType.VarChar).Value = param.code;
+                reader = checkCode.ExecuteReader();
+                reader.Read();
+
+                if (!reader.HasRows) {
+                    reader.Close();
+                    connection.Close();
+                    return "Illegal code";
+                }
+                reader.Close();
+
+                //Check valid redirect uri
+                MySqlCommand checkRedirect = new MySqlCommand("SELECT * FROM `oauth2`.`redirect_urls` WHERE client_id = @client_id AND redirect_uri = @redirect_uri", connection);
+                checkRedirect.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
+                checkRedirect.Parameters.Add("@redirect_uri", MySqlDbType.VarChar).Value = param.redirect_uri;
+                reader = checkRedirect.ExecuteReader();
+                reader.Read();
+
+                if (!reader.HasRows) {
+                    reader.Close();
+                    connection.Close();
+                    return "Illegal redirect_uri";        
+                }
                 reader.Close();
                 connection.Close();
-                return "Illegal code";
+                return "Access";
             }
-
-            reader.Close();
-
-            
-            //check redirect_uri
-            MySqlCommand redirect_uriQuery = new MySqlCommand("SELECT * FROM oauth2.redirect_urls WHERE client_id = @client_id AND redirect_uri = @redirect_uri;", connection);
-            redirect_uriQuery.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = client_id;
-            redirect_uriQuery.Parameters.Add("@redirect_uri", MySqlDbType.VarChar).Value = param.redirect_uri;
-            reader = redirect_uriQuery.ExecuteReader();
-            reader.Read();
-
-            if (!reader.HasRows)
+            else if (!param.grant_type.Equals("refresh_token") || !param.grant_type.Equals("access_token"))
             {
-                return "Illegal redirect_uri";
+                return "Illegal grant_type";
             }
-
             return "Valid";
         }
 
@@ -281,6 +337,54 @@ namespace OAuth2.Models
             query.ExecuteNonQuery();
             connection.Close();
             return token;
+        }
+
+        public static RefreshTokenModel RefreshToken(string refresh_token, AccessTokenParams param)
+        {
+            //get required info to update db table
+
+            char[] accessToken = new char[151];
+            Random rand = new Random();
+
+            for (int i = 0; i < 151; ++i)
+            {
+                int charAsNum = rand.Next(45, 122);
+
+                while (charAsNum >= 58 && charAsNum <= 64 || charAsNum >= 91 && charAsNum <= 94 || charAsNum == 96 || charAsNum >= 46 && charAsNum <= 47)
+                {
+                    charAsNum = rand.Next(48, 122);
+                }
+                accessToken[i] = (char)charAsNum;
+            }
+
+
+            connection = new MySqlConnection(connectionString);
+            connection.Open();
+            MySqlCommand accessInfo = new MySqlCommand("SELECT * FROM `oauth2`.`access_tokens` where refresh_token = @refresh_token AND client_id = @client_id;", connection);
+            accessInfo.Parameters.Add("@refresh_token", MySqlDbType.VarChar).Value = refresh_token;
+            accessInfo.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = param.client_id;
+
+            MySqlDataReader reader = accessInfo.ExecuteReader();
+            reader.Read();
+
+            string access_token = (string)reader["access_token"];
+            reader.Close();
+            MySqlCommand updateAccessToken = new MySqlCommand("UPDATE oauth2.access_tokens SET access_token = @access_token, timestamp = CURRENT_TIMESTAMP WHERE client_id = @client_id AND refresh_token = @refresh_token;", connection);
+            updateAccessToken.Parameters.Add("@access_token", MySqlDbType.VarChar).Value = new string(accessToken);
+            updateAccessToken.Parameters.Add("@client_id", MySqlDbType.VarChar).Value = param.client_id;
+            updateAccessToken.Parameters.Add("@refresh_token", MySqlDbType.VarChar).Value = refresh_token;
+
+            updateAccessToken.ExecuteNonQuery();
+            connection.Close();
+
+            RefreshTokenModel token = new RefreshTokenModel();
+            token.access_token = new string(accessToken);
+            token.expires_id = 3600;
+            token.scope = "";
+            token.token_type = "Bearer";
+
+            return token;
+
         }
     }
 }
