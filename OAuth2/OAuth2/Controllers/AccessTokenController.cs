@@ -18,6 +18,7 @@ namespace OAuth2.Controllers
         [HttpPost]
         public ActionResult postGetToken([FromForm] AccessTokenParams param, [FromHeader] string Authorization)
         {
+           
             string response = DatabaseContext.ValidateAccessParams(param, Authorization);
 
             if (response.Equals("Refresh"))
@@ -34,8 +35,6 @@ namespace OAuth2.Controllers
             {
                 return Ok(response);
             }
-
-                         
             return Ok(response);
         }
     }
