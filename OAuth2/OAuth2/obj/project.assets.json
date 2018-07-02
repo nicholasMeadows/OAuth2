@@ -12374,11 +12374,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\nicholas.meadows\\Documents\\GitHub\\OAuth2\\OAuth2\\OAuth2\\OAuth2.csproj",
+      "projectUniqueName": "C:\\GitHub\\OAuth2\\OAuth2\\OAuth2\\OAuth2.csproj",
       "projectName": "OAuth2",
-      "projectPath": "C:\\Users\\nicholas.meadows\\Documents\\GitHub\\OAuth2\\OAuth2\\OAuth2\\OAuth2.csproj",
+      "projectPath": "C:\\GitHub\\OAuth2\\OAuth2\\OAuth2\\OAuth2.csproj",
       "packagesPath": "C:\\Users\\nicholas.meadows\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\nicholas.meadows\\Documents\\GitHub\\OAuth2\\OAuth2\\OAuth2\\obj\\",
+      "outputPath": "C:\\GitHub\\OAuth2\\OAuth2\\OAuth2\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
