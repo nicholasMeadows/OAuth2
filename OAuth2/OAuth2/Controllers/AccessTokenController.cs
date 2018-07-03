@@ -18,24 +18,26 @@ namespace OAuth2.Controllers
         [HttpPost]
         public ActionResult postGetToken([FromForm] AccessTokenParams param, [FromHeader] string Authorization)
         {
-           
-            string response = DatabaseContext.ValidateAccessParams(param, Authorization);
+            /*
+             string response = DatabaseContext.ValidateAccessParams(param, Authorization);
 
-            if (response.Equals("Refresh"))
-            {
-                //Generate new refresh token and update database
-                
-                return Ok(DatabaseContext.RefreshToken(param.refresh_token, param));
-            }
-            else if (response.Equals("Access"))
-            {
-                return Ok(DatabaseContext.GenerateAccessToken(param.client_id));
-            }
-            else if (!response.Equals("Valid"))
-            {
-                return Ok(response);
-            }
-            return Ok(response);
+             if (response.Equals("Refresh"))
+             {
+                 //Generate new refresh token and update database
+
+                 return Ok(DatabaseContext.RefreshToken(param.refresh_token, param));
+             }
+             else if (response.Equals("Access"))
+             {
+                 return Ok(DatabaseContext.GenerateAccessToken(param.client_id));
+             }
+             else if (!response.Equals("Valid"))
+             {
+                 return Ok(response);
+             }
+             return Ok(response);*/
+
+            return Ok("/API/TOKEN ENDPOINT");
         }
     }
 }
