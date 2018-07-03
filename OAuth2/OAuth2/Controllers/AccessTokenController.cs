@@ -11,7 +11,7 @@ namespace OAuth2.Controllers
 {
     [Route("api/token")]
     [ApiController]
-    [RequireHttps]
+    //[RequireHttps]
     [Consumes("application/x-www-form-urlencoded")]
     public class AccessTokenController : ControllerBase
     {
